@@ -7,41 +7,30 @@ async function startBot() {
     const sock = makeWASocket({
         auth: state,
         logger: pino({ level: 'silent' }),
-        browser: ['Chrome (Linux)', '', '']
+        printQRInTerminal: false
     });
 
-    const targetPhoneNumber = "628xxxxxxxxxx"; // Ganti nomor WA lu (tanpa tanda +, spasi, atau strip)
+    if (!sock.authState.creds.registered) {
+        const phoneNumber = "628xxxxxxxxxx"; // Ganti nomor WA lu di sini
+        setTimeout(async () => {
+            const code = await sock.requestPairingCode(phoneNumber);
+            console.log(`\n🔑 KODE PAIRING LU: ${code}\n`);
+        }, 3000);
+    }
 
-    // Gunakan event connection.update untuk memastikan socket benar-benar siap
-    sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect, qr } = update;
+    sock.ev.on('creds.update', saveCreds);
 
-        // Trigger pairing code aman saat socket mendeteksi status siap/meminta pairing
-        if (!sock.authState.creds.registered && (qr || connection === 'connecting')) {
-            setTimeout(async () => {
-                if (!sock.authState.creds.registered) {
-                    try {
-                        const code = await sock.requestPairingCode(targetPhoneNumber);
-                        console.log(`\n🔑 KODE PAIRING LU: ${code}\n`);
-                    } catch (err) {
-                        // Abaikan error sesaat jika socket masih handshaking
-                    }
-                }
-            }, 3000);
-        }
-
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
         if (connection === 'open') {
             console.log('Bot WhatsApp Berhasil Terhubung!');
         } else if (connection === 'close') {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Koneksi terputus, mencoba menghubungkan ulang...');
             if (shouldReconnect) {
                 startBot();
             }
         }
     });
-
-    sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('messages.upsert', async (m) => {
         const msg = m.messages[0];
