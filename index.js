@@ -2,8 +2,16 @@ const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers
 const pino = require('pino');
 const readline = require('readline');
 
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-const question = (text) => new Promise((resolve) => rl.question(text, resolve));
+function askQuestion(query) {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+    return new Promise(resolve => rl.question(query, ans => {
+        rl.close();
+        resolve(ans);
+    }));
+}
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('session');
@@ -18,9 +26,8 @@ async function startBot() {
         fireInitQueries: false
     });
 
-    // Fitur Pairing Code pakai nomor HP
     if (!sock.authState.creds.registered) {
-        const phoneNumber = await question('Masukkan nomor WhatsApp lu (contoh: 628xxxxxxxxxx): ');
+        const phoneNumber = await askQuestion('Masukkan nomor WhatsApp lu (contoh: 628xxxxxxxxxx): ');
         const code = await sock.requestPairingCode(phoneNumber.trim());
         console.log(`\n🔑 KODE PAIRING LU: ${code}\n`);
     }
@@ -31,7 +38,6 @@ async function startBot() {
         const { connection, lastDisconnect } = update;
         if (connection === 'open') {
             console.log('Bot WhatsApp Berhasil Terhubung!');
-            rl.close();
         } else if (connection === 'close') {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('Koneksi terputus, mencoba menghubungkan ulang...', shouldReconnect);
