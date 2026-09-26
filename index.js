@@ -11,7 +11,7 @@ async function startBot() {
     });
 
     if (!sock.authState.creds.registered) {
-        const phoneNumber = "628xxxxxxxxxx"; // Ganti nomor WA lu di sini
+        const phoneNumber = "6288991400566"; // Nomor WhatsApp lu
         setTimeout(async () => {
             const code = await sock.requestPairingCode(phoneNumber);
             console.log(`\n🔑 KODE PAIRING LU: ${code}\n`);
