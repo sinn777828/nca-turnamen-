@@ -1,4 +1,4 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 
 async function startBot() {
@@ -7,17 +7,16 @@ async function startBot() {
     const sock = makeWASocket({
         auth: state,
         logger: pino({ level: 'silent' }),
-        printQRInTerminal: false,
-        // Pakai setelan browser Ubuntu agar pairing code lebih stabil diterima WA
-        browser: Browsers.ubuntu('Chrome'),
+        browser: ['Ubuntu', 'Chrome', '20.0.04'],
         markOnlineOnConnect: true,
         emitOwnEvents: false,
         fireInitQueries: false
     });
 
-    const targetPhoneNumber = "628xxxxxxxxxx"; // Ganti nomor WA lu di sini (tanpa +)
+    const targetPhoneNumber = "628xxxxxxxxxx"; // Ganti nomor WA lu (tanpa +)
 
     if (!sock.authState.creds.registered) {
+        // Beri jeda 5 detik agar socket siap sepenuhnya sebelum request pairing code
         setTimeout(async () => {
             try {
                 const code = await sock.requestPairingCode(targetPhoneNumber);
@@ -25,7 +24,7 @@ async function startBot() {
             } catch (err) {
                 console.log("Gagal minta kode pairing:", err);
             }
-        }, 4000);
+        }, 5000);
     }
 
     sock.ev.on('creds.update', saveCreds);
