@@ -1,10 +1,16 @@
 {
   "name": "nca-turnamen",
   "version": "1.0.0",
-  "description": "Auto reply bot Encea Tournament",
+  "description": "",
   "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.12",
-    "pino": "^9.0.0"
+    "@whiskeysockets/baileys": "^6.7.5",
+    "pino": "^9.6.0"
   }
 }
