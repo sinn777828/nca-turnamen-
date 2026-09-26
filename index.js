@@ -7,40 +7,41 @@ async function startBot() {
     const sock = makeWASocket({
         auth: state,
         logger: pino({ level: 'silent' }),
-        browser: ['Ubuntu', 'Chrome', '20.0.04'],
-        markOnlineOnConnect: true,
-        emitOwnEvents: false,
-        fireInitQueries: false
+        browser: ['Chrome (Linux)', '', '']
     });
 
-    const targetPhoneNumber = "628xxxxxxxxxx"; // Ganti nomor WA lu (tanpa +)
+    const targetPhoneNumber = "628xxxxxxxxxx"; // Ganti nomor WA lu (tanpa tanda +, spasi, atau strip)
 
-    if (!sock.authState.creds.registered) {
-        // Beri jeda 5 detik agar socket siap sepenuhnya sebelum request pairing code
-        setTimeout(async () => {
-            try {
-                const code = await sock.requestPairingCode(targetPhoneNumber);
-                console.log(`\n🔑 KODE PAIRING LU: ${code}\n`);
-            } catch (err) {
-                console.log("Gagal minta kode pairing:", err);
-            }
-        }, 5000);
-    }
+    // Gunakan event connection.update untuk memastikan socket benar-benar siap
+    sock.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect, qr } = update;
 
-    sock.ev.on('creds.update', saveCreds);
+        // Trigger pairing code aman saat socket mendeteksi status siap/meminta pairing
+        if (!sock.authState.creds.registered && (qr || connection === 'connecting')) {
+            setTimeout(async () => {
+                if (!sock.authState.creds.registered) {
+                    try {
+                        const code = await sock.requestPairingCode(targetPhoneNumber);
+                        console.log(`\n🔑 KODE PAIRING LU: ${code}\n`);
+                    } catch (err) {
+                        // Abaikan error sesaat jika socket masih handshaking
+                    }
+                }
+            }, 3000);
+        }
 
-    sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
         if (connection === 'open') {
             console.log('Bot WhatsApp Berhasil Terhubung!');
         } else if (connection === 'close') {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Koneksi terputus, mencoba menghubungkan ulang...', shouldReconnect);
+            console.log('Koneksi terputus, mencoba menghubungkan ulang...');
             if (shouldReconnect) {
                 startBot();
             }
         }
     });
+
+    sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('messages.upsert', async (m) => {
         const msg = m.messages[0];
