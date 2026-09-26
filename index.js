@@ -1,17 +1,5 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers } = require('@whiskeysockets/baileys');
 const pino = require('pino');
-const readline = require('readline');
-
-function askQuestion(query) {
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
-    return new Promise(resolve => rl.question(query, ans => {
-        rl.close();
-        resolve(ans);
-    }));
-}
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('session');
@@ -26,10 +14,18 @@ async function startBot() {
         fireInitQueries: false
     });
 
+    // Masukin nomor WhatsApp lu langsung di sini (tanpa tanda +, contoh: 628123456789)
+    const targetPhoneNumber = "628xxxxxxxxxx"; 
+
     if (!sock.authState.creds.registered) {
-        const phoneNumber = await askQuestion('Masukkan nomor WhatsApp lu (contoh: 628xxxxxxxxxx): ');
-        const code = await sock.requestPairingCode(phoneNumber.trim());
-        console.log(`\n🔑 KODE PAIRING LU: ${code}\n`);
+        setTimeout(async () => {
+            try {
+                const code = await sock.requestPairingCode(targetPhoneNumber);
+                console.log(`\n🔑 KODE PAIRING LU: ${code}\n`);
+            } catch (err) {
+                console.log("Gagal minta kode pairing:", err);
+            }
+        }, 3000);
     }
 
     sock.ev.on('creds.update', saveCreds);
@@ -60,7 +56,7 @@ async function startBot() {
                 `1. Wajib Kirim 15 Screenshot (3 SS per orang untuk 5 anggota tim).\n` +
                 `2. Follow TikTok @enceaaturnamen\n🔗 https://www.tiktok.com/@enceaaturnamen?_r=1&_t=ZS-9A3EpfdhxYr\n\n` +
                 `3. Follow Saluran WhatsApp Encea Tournament\n🔗 https://whatsapp.com/channel/0029VbCoSrG3gvWa2hD6ZJ0Q\n\n` +
-                `4. Upload Poster + Caption (cek story/status) & sertakan buktinya.\n\n` +
+                `4. Upload Poster + Caption & sertakan buktinya.\n\n` +
                 `Silakan kirimkan seluruh bukti screenshot persyaratan ke sini!`;
 
             await sock.sendMessage(sender, { text: replyText }, { quoted: msg });
