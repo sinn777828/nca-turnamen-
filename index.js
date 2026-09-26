@@ -8,14 +8,14 @@ async function startBot() {
         auth: state,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false,
-        browser: Browsers.macOS('Chrome'),
+        // Pakai setelan browser Ubuntu agar pairing code lebih stabil diterima WA
+        browser: Browsers.ubuntu('Chrome'),
         markOnlineOnConnect: true,
         emitOwnEvents: false,
         fireInitQueries: false
     });
 
-    // Masukin nomor WhatsApp lu langsung di sini (tanpa tanda +, contoh: 628123456789)
-    const targetPhoneNumber = "628xxxxxxxxxx"; 
+    const targetPhoneNumber = "628xxxxxxxxxx"; // Ganti nomor WA lu di sini (tanpa +)
 
     if (!sock.authState.creds.registered) {
         setTimeout(async () => {
@@ -25,7 +25,7 @@ async function startBot() {
             } catch (err) {
                 console.log("Gagal minta kode pairing:", err);
             }
-        }, 3000);
+        }, 4000);
     }
 
     sock.ev.on('creds.update', saveCreds);
