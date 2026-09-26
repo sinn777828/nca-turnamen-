@@ -2,7 +2,8 @@ name: Run WhatsApp Bot
 
 on:
   workflow_dispatch:
-
+  schedule:
+    - cron: '0 */4 * * *'
 
 jobs:
   build:
@@ -19,6 +20,17 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Start Bot for Pairing
-        run: node index.js
-        
+      - name: Start Bot & Keep Alive
+        run: |
+          node index.js &
+          sleep 14000
+
+      - name: Auto-Save Session
+        continue-on-error: true
+        run: |
+          git config --global user.name "Session Bot"
+          git config --global user.email "bot@github.com"
+          git add session/
+          git commit -m "Auto save session state [skip ci]" || echo "No changes"
+          git push
+          
