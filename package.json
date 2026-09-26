@@ -1,14 +1,10 @@
 {
-  "name": "bot-wa-encea",
+  "name": "nca-turnamen",
   "version": "1.0.0",
-  "description": "Bot Verifikasi Turnamen ENCEA",
+  "description": "Auto reply bot Encea Tournament",
   "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
   "dependencies": {
-    "@google/genai": "^0.1.1",
-    "@whiskeysockets/baileys": "^6.7.9",
-    "qrcode-terminal": "^0.12.0"
+    "@whiskeysockets/baileys": "^6.7.12",
+    "pino": "^9.0.0"
   }
 }
